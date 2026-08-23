@@ -39,42 +39,7 @@ Authentication is required to access expense data.
 
 ## Architecture
 
-```text
-                        ┌───────────────────┐
-                        │       User        │
-                        └─────────┬─────────┘
-                                  │ HTTPS
-                                  ▼
-                        ┌───────────────────┐
-                        │ Amazon CloudFront │
-                        └─────────┬─────────┘
-                                  │
-                                  ▼
-                        ┌───────────────────┐
-                        │     Amazon S3     │
-                        │  React Frontend   │
-                        └─────────┬─────────┘
-                                  │
-                 Authentication  │  API Requests
-                        ┌─────────┴─────────┐
-                        ▼                   ▼
-              ┌─────────────────┐   ┌─────────────────┐
-              │ Amazon Cognito  │   │ API Gateway     │
-              │   User Pool     │   │ HTTP API        │
-              └─────────────────┘   └────────┬────────┘
-                                             │
-                                             ▼
-                                    ┌─────────────────┐
-                                    │   AWS Lambda    │
-                                    │  CRUD Functions │
-                                    └────────┬────────┘
-                                             │
-                                             ▼
-                                    ┌─────────────────┐
-                                    │ Amazon DynamoDB │
-                                    │ Expense Storage │
-                                    └─────────────────┘
-```
+![Serverless Expense Tracker AWS Architecture](docs/architecture.png)
 
 ---
 
