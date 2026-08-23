@@ -1,0 +1,15 @@
+{
+  "name": "serverless-expense-tracker-backend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Serverless backend for the Expense Tracker application",
+  "scripts": {
+    "build": "sam build",
+    "validate": "sam validate"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.883.0",
+    "@aws-sdk/lib-dynamodb": "^3.883.0"
+  }
+}

@@ -1,0 +1,147 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+
+Description: >
+  Serverless Expense Tracker backend.
+  Defines four SAM-managed Lambda CRUD functions
+  that use the existing expense-tracker DynamoDB table.
+
+Parameters:
+  ExpenseTableName:
+    Type: String
+    Default: expense-tracker
+    Description: Name of the existing DynamoDB expense table.
+
+Globals:
+  Function:
+    Runtime: nodejs22.x
+
+    Architectures:
+      - x86_64
+
+    MemorySize: 128
+    Timeout: 10
+
+    Environment:
+      Variables:
+        TABLE_NAME: !Ref ExpenseTableName
+
+    Tags:
+      Project: serverless-expense-tracker
+      ManagedBy: AWS-SAM
+
+Resources:
+
+  # ==================================================
+  # CREATE EXPENSE
+  # ==================================================
+
+  CreateExpenseFunction:
+    Type: AWS::Serverless::Function
+
+    Properties:
+      Description: >
+        Creates an expense for the authenticated user.
+
+      CodeUri: functions/createExpense/
+      Handler: index.handler
+
+      Policies:
+        - Statement:
+            - Sid: AllowCreateExpense
+              Effect: Allow
+              Action:
+                - dynamodb:PutItem
+              Resource:
+                !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${ExpenseTableName}
+
+  # ==================================================
+  # GET EXPENSES
+  # ==================================================
+
+  GetExpensesFunction:
+    Type: AWS::Serverless::Function
+
+    Properties:
+      Description: >
+        Retrieves expenses belonging to the authenticated user.
+
+      CodeUri: functions/getExpenses/
+      Handler: index.handler
+
+      Policies:
+        - Statement:
+            - Sid: AllowGetExpenses
+              Effect: Allow
+              Action:
+                - dynamodb:Query
+              Resource:
+                !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${ExpenseTableName}
+
+  # ==================================================
+  # UPDATE EXPENSE
+  # ==================================================
+
+  UpdateExpenseFunction:
+    Type: AWS::Serverless::Function
+
+    Properties:
+      Description: >
+        Updates an existing expense belonging to the authenticated user.
+
+      CodeUri: functions/updateExpense/
+      Handler: index.handler
+
+      Policies:
+        - Statement:
+            - Sid: AllowUpdateExpense
+              Effect: Allow
+              Action:
+                - dynamodb:UpdateItem
+              Resource:
+                !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${ExpenseTableName}
+
+  # ==================================================
+  # DELETE EXPENSE
+  # ==================================================
+
+  DeleteExpenseFunction:
+    Type: AWS::Serverless::Function
+
+    Properties:
+      Description: >
+        Deletes an expense belonging to the authenticated user.
+
+      CodeUri: functions/deleteExpense/
+      Handler: index.handler
+
+      Policies:
+        - Statement:
+            - Sid: AllowDeleteExpense
+              Effect: Allow
+              Action:
+                - dynamodb:DeleteItem
+              Resource:
+                !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${ExpenseTableName}
+
+Outputs:
+
+  CreateExpenseFunctionArn:
+    Description: ARN of the SAM-managed createExpense Lambda function.
+    Value: !GetAtt CreateExpenseFunction.Arn
+
+  GetExpensesFunctionArn:
+    Description: ARN of the SAM-managed getExpenses Lambda function.
+    Value: !GetAtt GetExpensesFunction.Arn
+
+  UpdateExpenseFunctionArn:
+    Description: ARN of the SAM-managed updateExpense Lambda function.
+    Value: !GetAtt UpdateExpenseFunction.Arn
+
+  DeleteExpenseFunctionArn:
+    Description: ARN of the SAM-managed deleteExpense Lambda function.
+    Value: !GetAtt DeleteExpenseFunction.Arn
+
+  ExpenseTable:
+    Description: Existing DynamoDB table used by the backend.
+    Value: !Ref ExpenseTableName
