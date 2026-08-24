@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   deploy:
-    name: Build and Deploy Backend
+    name: Test, Build and Deploy Backend
     runs-on: ubuntu-latest
 
     defaults:
@@ -31,6 +31,14 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install backend dependencies
+        run: npm ci
+
+      - name: Run backend unit tests
+        run: npm test
 
       - name: Setup AWS SAM CLI
         uses: aws-actions/setup-sam@v2
@@ -72,4 +80,5 @@ jobs:
 
       - name: Deployment complete
         run: |
+          echo "Expense Tracker backend tests passed."
           echo "Expense Tracker backend deployment completed successfully."

@@ -6,10 +6,14 @@
   "description": "Serverless backend for the Expense Tracker application",
   "scripts": {
     "build": "sam build",
-    "validate": "sam validate"
+    "validate": "sam validate",
+    "test": "vitest run"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.883.0",
     "@aws-sdk/lib-dynamodb": "^3.883.0"
+  },
+  "devDependencies": {
+    "vitest": "^4.1.11"
   }
 }
