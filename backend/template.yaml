@@ -4,13 +4,19 @@ Transform: AWS::Serverless-2016-10-31
 Description: >
   Serverless Expense Tracker backend.
   Defines four SAM-managed Lambda CRUD functions,
-  centralized CloudWatch logging, and operational alarms.
+  centralized CloudWatch logging, operational alarms,
+  and SNS email notifications.
 
 Parameters:
   ExpenseTableName:
     Type: String
     Default: expense-tracker
     Description: Name of the existing DynamoDB expense table.
+
+  AlarmEmail:
+    Type: String
+    NoEcho: true
+    Description: Email address that receives CloudWatch alarm notifications.
 
 Globals:
   Function:
@@ -47,6 +53,33 @@ Resources:
     Properties:
       LogGroupName: !Sub "/expense-tracker/${AWS::StackName}"
       RetentionInDays: 14
+
+
+  # ==================================================
+  # SNS NOTIFICATIONS
+  # ==================================================
+
+  ExpenseTrackerAlarmTopic:
+    Type: AWS::SNS::Topic
+
+    Properties:
+      TopicName: !Sub "${AWS::StackName}-alarms"
+      DisplayName: Expense Tracker Alerts
+
+      Tags:
+        - Key: Project
+          Value: serverless-expense-tracker
+        - Key: ManagedBy
+          Value: AWS-SAM
+
+
+  ExpenseTrackerEmailSubscription:
+    Type: AWS::SNS::Subscription
+
+    Properties:
+      Protocol: email
+      Endpoint: !Ref AlarmEmail
+      TopicArn: !Ref ExpenseTrackerAlarmTopic
 
 
   # ==================================================
@@ -168,8 +201,8 @@ Resources:
       AlarmName: !Sub "${AWS::StackName}-CreateExpense-Errors"
 
       AlarmDescription: >
-        Triggers when the CreateExpense Lambda reports one or more
-        errors during a five-minute period.
+        Triggers when CreateExpense reports one or more
+        Lambda errors during a five-minute period.
 
       Namespace: AWS/Lambda
       MetricName: Errors
@@ -185,8 +218,13 @@ Resources:
 
       Threshold: 1
       ComparisonOperator: GreaterThanOrEqualToThreshold
-
       TreatMissingData: notBreaching
+
+      AlarmActions:
+        - !Ref ExpenseTrackerAlarmTopic
+
+      OKActions:
+        - !Ref ExpenseTrackerAlarmTopic
 
 
   CreateExpenseThrottlesAlarm:
@@ -212,8 +250,13 @@ Resources:
 
       Threshold: 1
       ComparisonOperator: GreaterThanOrEqualToThreshold
-
       TreatMissingData: notBreaching
+
+      AlarmActions:
+        - !Ref ExpenseTrackerAlarmTopic
+
+      OKActions:
+        - !Ref ExpenseTrackerAlarmTopic
 
 
   # ==================================================
@@ -227,8 +270,8 @@ Resources:
       AlarmName: !Sub "${AWS::StackName}-GetExpenses-Errors"
 
       AlarmDescription: >
-        Triggers when the GetExpenses Lambda reports one or more
-        errors during a five-minute period.
+        Triggers when GetExpenses reports one or more
+        Lambda errors during a five-minute period.
 
       Namespace: AWS/Lambda
       MetricName: Errors
@@ -244,8 +287,13 @@ Resources:
 
       Threshold: 1
       ComparisonOperator: GreaterThanOrEqualToThreshold
-
       TreatMissingData: notBreaching
+
+      AlarmActions:
+        - !Ref ExpenseTrackerAlarmTopic
+
+      OKActions:
+        - !Ref ExpenseTrackerAlarmTopic
 
 
   GetExpensesThrottlesAlarm:
@@ -271,8 +319,13 @@ Resources:
 
       Threshold: 1
       ComparisonOperator: GreaterThanOrEqualToThreshold
-
       TreatMissingData: notBreaching
+
+      AlarmActions:
+        - !Ref ExpenseTrackerAlarmTopic
+
+      OKActions:
+        - !Ref ExpenseTrackerAlarmTopic
 
 
   # ==================================================
@@ -286,8 +339,8 @@ Resources:
       AlarmName: !Sub "${AWS::StackName}-UpdateExpense-Errors"
 
       AlarmDescription: >
-        Triggers when the UpdateExpense Lambda reports one or more
-        errors during a five-minute period.
+        Triggers when UpdateExpense reports one or more
+        Lambda errors during a five-minute period.
 
       Namespace: AWS/Lambda
       MetricName: Errors
@@ -303,8 +356,13 @@ Resources:
 
       Threshold: 1
       ComparisonOperator: GreaterThanOrEqualToThreshold
-
       TreatMissingData: notBreaching
+
+      AlarmActions:
+        - !Ref ExpenseTrackerAlarmTopic
+
+      OKActions:
+        - !Ref ExpenseTrackerAlarmTopic
 
 
   UpdateExpenseThrottlesAlarm:
@@ -330,8 +388,13 @@ Resources:
 
       Threshold: 1
       ComparisonOperator: GreaterThanOrEqualToThreshold
-
       TreatMissingData: notBreaching
+
+      AlarmActions:
+        - !Ref ExpenseTrackerAlarmTopic
+
+      OKActions:
+        - !Ref ExpenseTrackerAlarmTopic
 
 
   # ==================================================
@@ -345,8 +408,8 @@ Resources:
       AlarmName: !Sub "${AWS::StackName}-DeleteExpense-Errors"
 
       AlarmDescription: >
-        Triggers when the DeleteExpense Lambda reports one or more
-        errors during a five-minute period.
+        Triggers when DeleteExpense reports one or more
+        Lambda errors during a five-minute period.
 
       Namespace: AWS/Lambda
       MetricName: Errors
@@ -362,8 +425,13 @@ Resources:
 
       Threshold: 1
       ComparisonOperator: GreaterThanOrEqualToThreshold
-
       TreatMissingData: notBreaching
+
+      AlarmActions:
+        - !Ref ExpenseTrackerAlarmTopic
+
+      OKActions:
+        - !Ref ExpenseTrackerAlarmTopic
 
 
   DeleteExpenseThrottlesAlarm:
@@ -389,8 +457,13 @@ Resources:
 
       Threshold: 1
       ComparisonOperator: GreaterThanOrEqualToThreshold
-
       TreatMissingData: notBreaching
+
+      AlarmActions:
+        - !Ref ExpenseTrackerAlarmTopic
+
+      OKActions:
+        - !Ref ExpenseTrackerAlarmTopic
 
 
 Outputs:
@@ -418,3 +491,7 @@ Outputs:
   ExpenseTrackerLogGroupName:
     Description: Central CloudWatch log group for the Expense Tracker backend.
     Value: !Ref ExpenseTrackerLogGroup
+
+  ExpenseTrackerAlarmTopicArn:
+    Description: SNS topic used for backend monitoring alerts.
+    Value: !Ref ExpenseTrackerAlarmTopic
