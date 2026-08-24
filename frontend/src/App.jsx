@@ -470,7 +470,7 @@ function App() {
   if (!auth.isAuthenticated) {
     return (
       <div className="login-page">
-        <section className="login-visual">
+        <section className="login-shell">
           <div className="login-panel">
             <div className="brand-mark large">$</div>
             <p className="eyebrow">Serverless finance workspace</p>
@@ -486,6 +486,37 @@ function App() {
               Sign In
             </button>
             <span className="login-security">Secured with Amazon Cognito</span>
+          </div>
+
+          <div className="login-preview" aria-hidden="true">
+            <div className="preview-topline">
+              <span>Monthly snapshot</span>
+              <strong>$2,840.50</strong>
+            </div>
+
+            <div className="preview-chart">
+              <span style={{ height: "42%" }}></span>
+              <span style={{ height: "68%" }}></span>
+              <span style={{ height: "36%" }}></span>
+              <span style={{ height: "82%" }}></span>
+              <span style={{ height: "58%" }}></span>
+              <span style={{ height: "74%" }}></span>
+            </div>
+
+            <div className="preview-list">
+              <div>
+                <span>Food</span>
+                <strong>$482.20</strong>
+              </div>
+              <div>
+                <span>Transportation</span>
+                <strong>$216.80</strong>
+              </div>
+              <div>
+                <span>Utilities</span>
+                <strong>$145.00</strong>
+              </div>
+            </div>
           </div>
         </section>
       </div>
