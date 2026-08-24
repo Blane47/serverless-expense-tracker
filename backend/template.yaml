@@ -3,8 +3,8 @@ Transform: AWS::Serverless-2016-10-31
 
 Description: >
   Serverless Expense Tracker backend.
-  Defines four SAM-managed Lambda CRUD functions
-  that use the existing expense-tracker DynamoDB table.
+  Defines four SAM-managed Lambda CRUD functions,
+  centralized CloudWatch logging, and operational alarms.
 
 Parameters:
   ExpenseTableName:
@@ -26,11 +26,28 @@ Globals:
       Variables:
         TABLE_NAME: !Ref ExpenseTableName
 
+    LoggingConfig:
+      LogFormat: JSON
+      LogGroup: !Ref ExpenseTrackerLogGroup
+
     Tags:
       Project: serverless-expense-tracker
       ManagedBy: AWS-SAM
 
+
 Resources:
+
+  # ==================================================
+  # CLOUDWATCH LOGGING
+  # ==================================================
+
+  ExpenseTrackerLogGroup:
+    Type: AWS::Logs::LogGroup
+
+    Properties:
+      LogGroupName: !Sub "/expense-tracker/${AWS::StackName}"
+      RetentionInDays: 14
+
 
   # ==================================================
   # CREATE EXPENSE
@@ -38,6 +55,9 @@ Resources:
 
   CreateExpenseFunction:
     Type: AWS::Serverless::Function
+
+    DependsOn:
+      - ExpenseTrackerLogGroup
 
     Properties:
       Description: >
@@ -55,12 +75,16 @@ Resources:
               Resource:
                 !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${ExpenseTableName}
 
+
   # ==================================================
   # GET EXPENSES
   # ==================================================
 
   GetExpensesFunction:
     Type: AWS::Serverless::Function
+
+    DependsOn:
+      - ExpenseTrackerLogGroup
 
     Properties:
       Description: >
@@ -78,12 +102,16 @@ Resources:
               Resource:
                 !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${ExpenseTableName}
 
+
   # ==================================================
   # UPDATE EXPENSE
   # ==================================================
 
   UpdateExpenseFunction:
     Type: AWS::Serverless::Function
+
+    DependsOn:
+      - ExpenseTrackerLogGroup
 
     Properties:
       Description: >
@@ -101,12 +129,16 @@ Resources:
               Resource:
                 !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${ExpenseTableName}
 
+
   # ==================================================
   # DELETE EXPENSE
   # ==================================================
 
   DeleteExpenseFunction:
     Type: AWS::Serverless::Function
+
+    DependsOn:
+      - ExpenseTrackerLogGroup
 
     Properties:
       Description: >
@@ -123,6 +155,243 @@ Resources:
                 - dynamodb:DeleteItem
               Resource:
                 !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${ExpenseTableName}
+
+
+  # ==================================================
+  # CREATE EXPENSE ALARMS
+  # ==================================================
+
+  CreateExpenseErrorsAlarm:
+    Type: AWS::CloudWatch::Alarm
+
+    Properties:
+      AlarmName: !Sub "${AWS::StackName}-CreateExpense-Errors"
+
+      AlarmDescription: >
+        Triggers when the CreateExpense Lambda reports one or more
+        errors during a five-minute period.
+
+      Namespace: AWS/Lambda
+      MetricName: Errors
+
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref CreateExpenseFunction
+
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+
+      TreatMissingData: notBreaching
+
+
+  CreateExpenseThrottlesAlarm:
+    Type: AWS::CloudWatch::Alarm
+
+    Properties:
+      AlarmName: !Sub "${AWS::StackName}-CreateExpense-Throttles"
+
+      AlarmDescription: >
+        Triggers when the CreateExpense Lambda is throttled.
+
+      Namespace: AWS/Lambda
+      MetricName: Throttles
+
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref CreateExpenseFunction
+
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+
+      TreatMissingData: notBreaching
+
+
+  # ==================================================
+  # GET EXPENSES ALARMS
+  # ==================================================
+
+  GetExpensesErrorsAlarm:
+    Type: AWS::CloudWatch::Alarm
+
+    Properties:
+      AlarmName: !Sub "${AWS::StackName}-GetExpenses-Errors"
+
+      AlarmDescription: >
+        Triggers when the GetExpenses Lambda reports one or more
+        errors during a five-minute period.
+
+      Namespace: AWS/Lambda
+      MetricName: Errors
+
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref GetExpensesFunction
+
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+
+      TreatMissingData: notBreaching
+
+
+  GetExpensesThrottlesAlarm:
+    Type: AWS::CloudWatch::Alarm
+
+    Properties:
+      AlarmName: !Sub "${AWS::StackName}-GetExpenses-Throttles"
+
+      AlarmDescription: >
+        Triggers when the GetExpenses Lambda is throttled.
+
+      Namespace: AWS/Lambda
+      MetricName: Throttles
+
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref GetExpensesFunction
+
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+
+      TreatMissingData: notBreaching
+
+
+  # ==================================================
+  # UPDATE EXPENSE ALARMS
+  # ==================================================
+
+  UpdateExpenseErrorsAlarm:
+    Type: AWS::CloudWatch::Alarm
+
+    Properties:
+      AlarmName: !Sub "${AWS::StackName}-UpdateExpense-Errors"
+
+      AlarmDescription: >
+        Triggers when the UpdateExpense Lambda reports one or more
+        errors during a five-minute period.
+
+      Namespace: AWS/Lambda
+      MetricName: Errors
+
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref UpdateExpenseFunction
+
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+
+      TreatMissingData: notBreaching
+
+
+  UpdateExpenseThrottlesAlarm:
+    Type: AWS::CloudWatch::Alarm
+
+    Properties:
+      AlarmName: !Sub "${AWS::StackName}-UpdateExpense-Throttles"
+
+      AlarmDescription: >
+        Triggers when the UpdateExpense Lambda is throttled.
+
+      Namespace: AWS/Lambda
+      MetricName: Throttles
+
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref UpdateExpenseFunction
+
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+
+      TreatMissingData: notBreaching
+
+
+  # ==================================================
+  # DELETE EXPENSE ALARMS
+  # ==================================================
+
+  DeleteExpenseErrorsAlarm:
+    Type: AWS::CloudWatch::Alarm
+
+    Properties:
+      AlarmName: !Sub "${AWS::StackName}-DeleteExpense-Errors"
+
+      AlarmDescription: >
+        Triggers when the DeleteExpense Lambda reports one or more
+        errors during a five-minute period.
+
+      Namespace: AWS/Lambda
+      MetricName: Errors
+
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref DeleteExpenseFunction
+
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+
+      TreatMissingData: notBreaching
+
+
+  DeleteExpenseThrottlesAlarm:
+    Type: AWS::CloudWatch::Alarm
+
+    Properties:
+      AlarmName: !Sub "${AWS::StackName}-DeleteExpense-Throttles"
+
+      AlarmDescription: >
+        Triggers when the DeleteExpense Lambda is throttled.
+
+      Namespace: AWS/Lambda
+      MetricName: Throttles
+
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref DeleteExpenseFunction
+
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+
+      TreatMissingData: notBreaching
+
 
 Outputs:
 
@@ -145,3 +414,7 @@ Outputs:
   ExpenseTable:
     Description: Existing DynamoDB table used by the backend.
     Value: !Ref ExpenseTableName
+
+  ExpenseTrackerLogGroupName:
+    Description: Central CloudWatch log group for the Expense Tracker backend.
+    Value: !Ref ExpenseTrackerLogGroup
